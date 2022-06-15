@@ -1,14 +1,20 @@
 package com.example.crud.service;
 
 import com.example.crud.Exception.CRUDException;
-import com.example.crud.dto.Request.Register;
+import com.example.crud.dto.LoginDto;
+import com.example.crud.dto.RegisterDto;
+import com.example.crud.dto.AuthDto;
 import com.example.crud.model.NotificationEmail;
 import com.example.crud.model.User;
 import com.example.crud.model.VerificationToken;
 import com.example.crud.repository.UserRepository;
 import com.example.crud.repository.VerificationTokenRepository;
+import com.example.crud.security.JwtProvider;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,12 +31,14 @@ public class AuthService {
     private final VerificationTokenRepository verificationTokenRepository;
     private final UserRepository userRepository;
     private final MailService mailService;
+    private final JwtProvider jwtProvider;
+    private final AuthenticationManager authenticationManager;
     @Transactional
-    public void signup(Register register){
+    public void signup(RegisterDto registerDto){
         User user = new User();
-        user.setUsername(register.getUsername());
-        user.setEmail(passwordEncoder.encode(register.getPassword()));
-        user.setPassword(register.getPassword());
+        user.setUsername(registerDto.getUsername());
+        user.setEmail(registerDto.getEmail());
+        user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
         user.setCreated(Instant.now());
         user.setEnabled(false);
 
@@ -60,5 +68,13 @@ public class AuthService {
         User user= userRepository.findByUsername(username).orElseThrow(() -> new CRUDException("User not Found "+username));
         user.setEnabled(true);
         userRepository.save(user);
+    }
+
+    public AuthDto login(LoginDto loginDto) {
+        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authenticate);
+        String token = jwtProvider.generateToken(authenticate);
+        return new AuthDto(token, loginDto.getUsername());
+
     }
 }

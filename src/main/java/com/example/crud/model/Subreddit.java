@@ -20,7 +20,7 @@ public class Subreddit {
 
     @NotBlank(message = "Description Required")
     private String name;
-
+    private String description;
     @OneToMany(fetch = FetchType.LAZY)
     private List<Post> posts;
     private Instant createdDate;

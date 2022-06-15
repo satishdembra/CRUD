@@ -28,7 +28,6 @@ public class User {
     @NotBlank(message = "password can not be null")
     private String password;
     private Instant created;
-    @Email
     @NotEmpty(message = "Email is required")
     private String email;
     private boolean enabled;

@@ -1,14 +1,13 @@
-package com.example.crud.dto.Request;
+package com.example.crud.dto;
 
 import lombok.*;
-
-import javax.persistence.Entity;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Register {
+public class RegisterDto {
+
     private String email;
     private String username;
     private String password;
