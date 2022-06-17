@@ -1,6 +1,8 @@
 package com.example.crud.service;
 
+import com.example.crud.Exception.CRUDException;
 import com.example.crud.dto.SubredditDto;
+import com.example.crud.mapper.SubredditMappper;
 import com.example.crud.model.Subreddit;
 import com.example.crud.repository.SubredditRepository;
 import lombok.AllArgsConstructor;
@@ -34,5 +36,12 @@ public class SubredditService {
     private SubredditDto mapToDto(Subreddit subreddit) {
         return SubredditDto.builder().name(subreddit.getName()).description(subreddit.getDescription()).id(subreddit.getId()).numberOfPosts(subreddit.getPosts().size()).build();
 
+    }
+    public SubredditDto getSubreddit(Long id) {
+        Subreddit subreddit = subredditRepository.findById(id).orElseThrow(
+                () -> new CRUDException("No Subreddit Found against this ID")
+
+        );
+        return mapToDto(subreddit);
     }
 }

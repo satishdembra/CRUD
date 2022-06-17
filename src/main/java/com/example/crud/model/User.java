@@ -32,4 +32,15 @@ public class User {
     private String email;
     private boolean enabled;
 
+    @Override
+    public String toString() {
+        return "User{" +
+                "userId=" + userId +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", created=" + created +
+                ", email='" + email + '\'' +
+                ", enabled=" + enabled +
+                '}';
+    }
 }

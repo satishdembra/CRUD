@@ -1,15 +1,20 @@
 package com.example.crud.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@NoArgsConstructor
-@AllArgsConstructor
+import java.time.Instant;
+import java.util.Date;
+
 @Getter
 @Setter
+@Builder
+@AllArgsConstructor
+
 public class AuthDto {
-    String authenticationToken;
-    String username;
+    private String authenticationToken;
+    private String username;
+    private Instant expiry;
+    private String refreshToken;
+
+
 }

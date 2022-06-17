@@ -2,9 +2,11 @@ package com.example.crud.service;
 
 import com.example.crud.Exception.CRUDException;
 import com.example.crud.dto.LoginDto;
+import com.example.crud.dto.RefreshTokenRequest;
 import com.example.crud.dto.RegisterDto;
 import com.example.crud.dto.AuthDto;
 import com.example.crud.model.NotificationEmail;
+import com.example.crud.model.RefreshToken;
 import com.example.crud.model.User;
 import com.example.crud.model.VerificationToken;
 import com.example.crud.repository.UserRepository;
@@ -15,10 +17,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.sql.Date;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,6 +38,7 @@ public class AuthService {
     private final MailService mailService;
     private final JwtProvider jwtProvider;
     private final AuthenticationManager authenticationManager;
+    private final RefreshTokenService refreshTokenService;
     @Transactional
     public void signup(RegisterDto registerDto){
         User user = new User();
@@ -74,7 +80,31 @@ public class AuthService {
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authenticate);
         String token = jwtProvider.generateToken(authenticate);
-        return new AuthDto(token, loginDto.getUsername());
+        RefreshToken refreshToken = refreshTokenService.generateRefreshToken();
+        return AuthDto.builder()
+                .authenticationToken( token)
+                .username( loginDto.getUsername())
+                .expiry(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()))
+                .refreshToken(refreshToken.getToken())
+                .build();
 
+    }
+    public AuthDto refreshToken(RefreshTokenRequest refreshTokenRequest){
+         refreshTokenService.validateToken(refreshTokenRequest.getRefreshToken());
+         String token = jwtProvider.generateTokenWithUserName(refreshTokenRequest.getUsername());
+        return AuthDto.builder()
+                .authenticationToken( token)
+                .username( refreshTokenRequest.getUsername())
+                .expiry(Instant.now().plusMillis(jwtProvider.getJwtExpirationInMillis()))
+                .refreshToken(refreshTokenRequest.getRefreshToken())
+                .build();
+
+    }
+    @Transactional
+    public User getCurrentUser() {
+        Jwt principal = (Jwt) SecurityContextHolder.
+                getContext().getAuthentication().getPrincipal();
+        return userRepository.findByUsername(principal.getSubject())
+                .orElseThrow(() -> new UsernameNotFoundException("User name not found - " + principal.getSubject()));
     }
 }
